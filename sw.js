@@ -1,12 +1,12 @@
-const CACHE_NAME = "mimeddig-v2-shell-26";
+const CACHE_NAME = "mimeddig-v2-shell-27";
 const APP_SHELL = [
   "./",
   "./index.html",
   "./styles.css?v=26",
-  "./js/app.js?v=23",
+  "./js/app.js?v=24",
   "./js/db.js?v=10",
   "./js/domain.js?v=22",
-  "./js/render.js?v=23",
+  "./js/render.js?v=24",
   "./js/repository.js?v=22",
   "./manifest.webmanifest",
   "./icon.svg"
