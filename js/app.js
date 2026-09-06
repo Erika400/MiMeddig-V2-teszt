@@ -38,7 +38,7 @@ import {
   renderProductDetail,
   renderShopping,
   renderStatistics
-} from "./render.js?v=22";
+} from "./render.js?v=23";
 
 const state = {
   batches: [],

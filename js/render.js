@@ -98,16 +98,32 @@ function rescueCard(batch) {
     </article>`;
 }
 
+function locationIcon(kind) {
+  const icons = {
+    fridge: `<rect x="6" y="2.75" width="12" height="18.5" rx="3"/><path d="M6 10h12M9.25 6.2v1.9M9.25 13.2v3"/>`,
+    freezer: `<path class="location-icon-soft" d="M12 3.2a8.8 8.8 0 1 0 0 17.6 8.8 8.8 0 0 0 0-17.6Z"/><path d="M12 6.6v10.8M7.3 9.3l9.4 5.4M7.3 14.7l9.4-5.4M12 6.6l-1.45 1.45M12 6.6l1.45 1.45M12 17.4l-1.45-1.45M12 17.4l1.45-1.45M7.3 9.3l1.98.53M7.3 9.3l.53-1.98M16.7 14.7l-1.98-.53M16.7 14.7l-.53 1.98"/>`,
+    pantry: `<rect x="3.5" y="4" width="17" height="16" rx="2.5"/><path d="M3.5 10.2h17M9.1 7.15h.1M14.8 7.15h.1M8 13.2h3v4H8zM14 12.5h2.8v4.7H14z"/>`,
+    bath: `<path class="location-icon-soft" d="M3.3 12.2h17.4v2.1a5.2 5.2 0 0 1-5.2 5.2h-7a5.2 5.2 0 0 1-5.2-5.2v-2.1Z"/><path d="M3 12.2h18M6.2 12.2V7.8a3.3 3.3 0 0 1 6.2-1.55M6.1 19.5l-.8 1.4M17.9 19.5l.8 1.4M15.8 6.1h.1M18.1 8h.1"/>`,
+    medicine: `<rect x="3" y="7" width="18" height="13" rx="3"/><path class="location-icon-soft" d="M3 10.2h18v6.6H3z"/><path d="M9 7V5h6v2M12 11v5M9.5 13.5h5"/>`,
+    cosmetics: `<path d="M9 5h6M10 5v3h4V5M8 10.5A2.5 2.5 0 0 1 10.5 8h3A2.5 2.5 0 0 1 16 10.5V20H8v-9.5Z"/><path class="location-icon-soft" d="M8 13h8v7H8z"/><path d="M18.5 4.2v3M17 5.7h3"/>`,
+    custom: `<path class="location-icon-soft" d="M12 21s6-5.15 6-11a6 6 0 1 0-12 0c0 5.85 6 11 6 11Z"/><path d="M12 21s6-5.15 6-11a6 6 0 1 0-12 0c0 5.85 6 11 6 11ZM9.5 10.2 12 8l2.5 2.2v3.1h-5v-3.1Z"/>`,
+    add: `<rect x="3.5" y="3.5" width="17" height="17" rx="5"/><path d="M12 8v8M8 12h8"/>`,
+    all: `<rect x="4" y="4" width="6" height="6" rx="1.5"/><rect x="14" y="4" width="6" height="6" rx="1.5"/><rect x="4" y="14" width="6" height="6" rx="1.5"/><rect x="14" y="14" width="6" height="6" rx="1.5"/>`
+  };
+  return `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">${icons[kind] || icons.custom}</svg>`;
+}
+
 function locationAppearance(location) {
   const appearances = {
-    "Hűtő": ["location-fridge", "❄"],
-    "Fagyasztó": ["location-freezer", "✦"],
-    "Kamra": ["location-pantry", "⌂"],
-    "Fürdő": ["location-bath", "◇"],
-    "Gyógyszerek": ["location-medicine", "+"],
-    "Kozmetikumok": ["location-cosmetics", "●"]
+    "Hűtő": ["location-fridge", "fridge"],
+    "Fagyasztó": ["location-freezer", "freezer"],
+    "Kamra": ["location-pantry", "pantry"],
+    "Fürdő": ["location-bath", "bath"],
+    "Gyógyszerek": ["location-medicine", "medicine"],
+    "Kozmetikumok": ["location-cosmetics", "cosmetics"]
   };
-  return appearances[location] || ["location-custom", "⌖"];
+  const [tone, kind] = appearances[location] || ["location-custom", "custom"];
+  return [tone, locationIcon(kind)];
 }
 
 export function renderHome({ batches, shopping, stats, settings }) {
@@ -124,7 +140,7 @@ export function renderHome({ batches, shopping, stats, settings }) {
     const count = batches.filter((batch) => batch.location === location).length;
     const [tone, icon] = locationAppearance(location);
     return `<button class="location-card ${tone}" type="button" data-location="${escapeHtml(location)}"><span class="location-icon" aria-hidden="true">${icon}</span><strong class="location-name">${escapeHtml(location)}</strong><span class="location-meta">${count} tétel</span></button>`;
-  }).join("") + `<button class="location-card location-other add-location-card" type="button" data-open-custom-location><span class="location-icon" aria-hidden="true">＋</span><strong class="location-name">Egyéb hely</strong><span class="location-meta">Saját hely megadása</span></button>`;
+  }).join("") + `<button class="location-card location-other add-location-card" type="button" data-open-custom-location><span class="location-icon" aria-hidden="true">${locationIcon("add")}</span><strong class="location-name">Egyéb hely</strong><span class="location-meta">Saját hely megadása</span></button>`;
 
   const activeShopping = shopping.filter((item) => item.status === "active");
   document.querySelector("#shoppingPreviewCount").textContent = activeShopping.length
@@ -139,8 +155,11 @@ export function renderHome({ batches, shopping, stats, settings }) {
 export function renderInventoryPlaces(batches, selectedLocation, settings) {
   const locations = [...new Set([...(settings.defaultLocations || []), ...batches.map((batch) => batch.location)])];
   document.querySelector("#inventoryPlaces").innerHTML = [
-    `<button class="place-chip ${selectedLocation === "all" ? "is-selected" : ""}" type="button" data-location="all">Mind</button>`,
-    ...locations.map((location) => `<button class="place-chip ${selectedLocation === location ? "is-selected" : ""}" type="button" data-location="${escapeHtml(location)}">${escapeHtml(location)}</button>`)
+    `<button class="place-chip ${selectedLocation === "all" ? "is-selected" : ""}" type="button" data-location="all"><span class="place-chip-icon">${locationIcon("all")}</span><span>Mind</span></button>`,
+    ...locations.map((location) => {
+      const [tone, icon] = locationAppearance(location);
+      return `<button class="place-chip ${selectedLocation === location ? "is-selected" : ""}" type="button" data-location="${escapeHtml(location)}"><span class="place-chip-icon ${tone}">${icon}</span><span>${escapeHtml(location)}</span></button>`;
+    })
   ].join("");
 }
 
