@@ -7,7 +7,7 @@
   <meta name="description" content="MiMeddig – kövesd egyszerűen, mi meddig jó.">
   <title>MiMeddig V2</title>
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="stylesheet" href="styles.css?v=26">
+  <link rel="stylesheet" href="styles.css?v=27">
 </head>
 <body>
   <div class="prototype-note app-mode-note">Helyben mentő V2 · az adatok ezen az eszközön maradnak</div>
@@ -40,8 +40,8 @@
         <div class="quick-tools-grid">
           <button type="button" data-open-add><span>＋</span><strong>Termék hozzáadása</strong><small>3 adat elég</small></button>
           <button type="button" id="repeatRecentButton"><span>↻</span><strong>Újra megvettem</strong><small id="repeatRecentHint">Korábbi termék</small></button>
-          <button type="button" data-demo-message="A vonalkód helyét már előkészítettük, a leolvasó egy későbbi fejlesztési szakaszban készül el."><span>▥</span><strong>Vonalkód</strong><small>Későbbi funkció</small></button>
-          <button type="button" data-go-screen="shopping"><span>✓</span><strong>Bevásárlólista</strong><small>Kézzel és készletből</small></button>
+          <button type="button" data-demo-message="A vonalkód helyét már előkészítettük, a leolvasó egy későbbi fejlesztési szakaszban készül el."><span aria-hidden="true"><svg class="symbol-icon barcode-icon" viewBox="0 0 24 24"><rect x="3" y="4" width="1.4" height="16" rx=".4"/><rect x="6.2" y="4" width="2.2" height="16" rx=".4"/><rect x="10.2" y="4" width="1.1" height="16" rx=".35"/><rect x="13.1" y="4" width="2.6" height="16" rx=".4"/><rect x="17.5" y="4" width="1.2" height="16" rx=".35"/><rect x="20.3" y="4" width=".9" height="16" rx=".3"/></svg></span><strong>Vonalkód</strong><small>Későbbi funkció</small></button>
+          <button type="button" data-go-screen="shopping"><span aria-hidden="true"><svg class="symbol-icon list-icon" viewBox="0 0 24 24"><rect x="3" y="4.5" width="3" height="3" rx=".7"/><rect x="3" y="10.5" width="3" height="3" rx=".7"/><rect x="3" y="16.5" width="3" height="3" rx=".7"/><path d="M9 6h12M9 12h12M9 18h12"/></svg></span><strong>Bevásárlólista</strong><small>Kézzel és készletből</small></button>
         </div>
       </section>
 
@@ -185,7 +185,7 @@
       <button class="nav-item is-active" type="button" data-nav-screen="home"><span>⌂</span><small>Kezdőlap</small></button>
       <button class="nav-item" type="button" data-nav-screen="inventory"><span>▦</span><small>Készletek</small></button>
       <button class="nav-item add-nav" type="button" data-nav-screen="add"><span>＋</span><small>Új termék</small></button>
-      <button class="nav-item" type="button" data-nav-screen="shopping"><span>✓</span><small>Lista</small></button>
+      <button class="nav-item" type="button" data-nav-screen="shopping"><span aria-hidden="true"><svg class="symbol-icon list-icon" viewBox="0 0 24 24"><rect x="3" y="4.5" width="3" height="3" rx=".7"/><rect x="3" y="10.5" width="3" height="3" rx=".7"/><rect x="3" y="16.5" width="3" height="3" rx=".7"/><path d="M9 6h12M9 12h12M9 18h12"/></svg></span><small>Lista</small></button>
       <button class="nav-item" type="button" data-nav-screen="stats"><span>▥</span><small>Statisztika</small></button>
     </nav>
   </main>
