@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="MiMeddig">
+  <rect width="512" height="512" rx="112" fill="#396b58"/>
+  <circle cx="256" cy="256" r="164" fill="#f4c56b"/>
+  <path d="M153 350V162h57l47 93 47-93h56v188h-52V249l-35 69h-32l-36-69v101z" fill="#315c4b"/>
+</svg>

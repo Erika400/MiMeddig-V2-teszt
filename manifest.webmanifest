@@ -1,0 +1,19 @@
+{
+  "name": "MiMeddig V2",
+  "short_name": "MiMeddig",
+  "description": "Kövesd egyszerűen, mi meddig jó.",
+  "lang": "hu",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f7f4ec",
+  "theme_color": "#396b58",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

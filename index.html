@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#396b58">
+  <meta name="description" content="MiMeddig – kövesd egyszerűen, mi meddig jó.">
+  <title>MiMeddig V2</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="styles.css?v=23">
+</head>
+<body>
+  <div class="prototype-note app-mode-note">Helyben mentő V2 · az adatok ezen az eszközön maradnak</div>
+
+  <main class="app-shell" aria-label="MiMeddig V2">
+    <section class="screen is-active" id="homeScreen" data-screen="home">
+      <div class="brand-lockup" aria-label="MiMeddig">
+        <span class="brand-mark" aria-hidden="true">M</span>
+        <span><strong>MiMeddig</strong><small><span>Kövesd, mi meddig jó.</span><em>A pazarlás csökkenthető.</em></small></span>
+      </div>
+      <header class="topbar home-topbar">
+        <div>
+          <p class="eyebrow" id="homeDate"></p>
+          <h1 id="homeGreeting">Jó napot!</h1>
+          <p class="subtitle" id="homeSummary">A készlet betöltése folyamatban…</p>
+        </div>
+        <button class="icon-button" type="button" data-go-screen="settings" aria-label="Beállítások">⚙</button>
+      </header>
+
+      <section class="attention-card rescue-section" aria-labelledby="todayTitle">
+        <div class="section-heading compact-heading">
+          <div><p class="section-kicker">Egy pillantás is elég</p><h2 id="todayTitle">Mit ments meg ma?</h2></div>
+          <button class="text-button" type="button" data-go-screen="inventory" data-urgent-only>Mind</button>
+        </div>
+        <div id="homeUrgentList"></div>
+      </section>
+
+      <section class="content-section quick-tools-section" aria-labelledby="quickToolsTitle">
+        <div class="section-heading"><h2 id="quickToolsTitle">Intézd el egy mozdulattal.</h2></div>
+        <div class="quick-tools-grid">
+          <button type="button" data-open-add><span>＋</span><strong>Termék hozzáadása</strong><small>3 adat elég</small></button>
+          <button type="button" id="repeatRecentButton"><span>↻</span><strong>Újra megvettem</strong><small id="repeatRecentHint">Korábbi termék</small></button>
+          <button type="button" data-demo-message="A vonalkód helyét már előkészítettük, a leolvasó egy későbbi fejlesztési szakaszban készül el."><span>▥</span><strong>Vonalkód</strong><small>Későbbi funkció</small></button>
+          <button type="button" data-go-screen="shopping"><span>✓</span><strong>Bevásárlólista</strong><small>Kézzel és készletből</small></button>
+        </div>
+      </section>
+
+      <section class="content-section" aria-labelledby="locationsTitle">
+        <div class="section-heading">
+          <div><p class="section-kicker">Készletek</p><h2 id="locationsTitle">Hol találod?</h2></div>
+          <button class="text-button" type="button" data-go-screen="inventory">Összes</button>
+        </div>
+        <div class="location-grid" id="homeLocations"></div>
+      </section>
+
+      <section class="shopping-preview" aria-label="Bevásárlólista">
+        <button class="shopping-preview-link" type="button" data-go-screen="shopping"><span><strong>Bevásárlólista</strong><small id="shoppingPreviewCount">A lista üres</small></span><i aria-hidden="true">›</i></button>
+      </section>
+
+      <button class="waste-summary" type="button" data-go-screen="stats">
+        <span>Ebben a hónapban</span><strong id="homeWasteValue">0 Ft kidobási veszteség</strong><span>›</span>
+      </button>
+    </section>
+
+    <section class="screen" id="inventoryScreen" data-screen="inventory" hidden>
+      <header class="topbar compact-topbar">
+        <div><p class="eyebrow">Készletek</p><h1 id="inventoryTitle">Minden hely</h1><p class="subtitle" id="inventorySubtitle">0 aktív termék</p></div>
+        <button class="icon-button" type="button" id="inventorySearchButton" aria-label="Keresés">⌕</button>
+      </header>
+      <div class="inventory-place-strip" id="inventoryPlaces" aria-label="Helyek"></div>
+      <div class="inventory-controls">
+        <label><span>Rendezés</span><select id="sortProducts"><option value="expiry">Lejárat szerint</option><option value="name">ABC szerint</option></select></label>
+        <label><span>Csoportosítás</span><select id="groupProducts"><option value="category">Kategória</option><option value="none">Nincs</option></select></label>
+      </div>
+      <div class="inventory-list" id="inventoryList" aria-live="polite"></div>
+    </section>
+
+    <section class="screen" id="productDetailScreen" data-screen="product-detail" hidden>
+      <header class="topbar compact-topbar">
+        <div><p class="eyebrow">Termék részletei</p><p class="subtitle" id="detailPath"></p></div>
+        <button class="icon-button" type="button" data-go-screen="inventory" aria-label="Vissza a készletekhez">←</button>
+      </header>
+      <section class="detail-hero">
+        <span class="detail-emoji" id="detailIcon" aria-hidden="true"></span>
+        <div><p class="detail-brand" id="detailBrand"></p><h1 id="detailName"></h1><div id="detailTimeline"></div><span class="detail-expiry" id="detailExpiry"></span></div>
+      </section>
+      <aside class="separate-item-note"><strong>Ez egy külön készlettétel.</strong><span>Más lejárat, ár vagy kiszerelés esetén a hasonló termékeket sem vonjuk össze.</span></aside>
+      <div id="productDetailFields"></div>
+      <div class="detail-actions">
+        <button class="primary-button" type="button" id="editProductButton">✎ Szerkesztés</button>
+        <button type="button" data-detail-action="consumed">✓ Felhasználtam</button>
+        <button type="button" data-detail-action="frozen">❄ Lefagyasztom</button>
+        <button type="button" id="addDetailToShopping">＋ Bevásárlólistához adás</button>
+        <button class="danger-button" type="button" data-detail-action="discarded">⚠ Kidobtam</button>
+        <button type="button" id="repeatProductButton">↻ Újra megvettem</button>
+        <button class="danger-button subtle-danger" type="button" id="deleteProductButton">Tétel törlése</button>
+      </div>
+    </section>
+
+    <section class="screen" id="addScreen" data-screen="add" hidden>
+      <header class="topbar compact-topbar">
+        <div><p class="eyebrow" id="formEyebrow">Gyors felvitel</p><h1 id="formTitle">Új termék</h1><p class="subtitle" id="formSubtitle">A név, a hely és a dátum elég.</p></div>
+        <button class="icon-button" type="button" id="closeProductForm" aria-label="Bezárás">×</button>
+      </header>
+      <form class="product-form" id="productForm">
+        <input type="hidden" id="editingBatchId"><input type="hidden" id="productTemplateId">
+        <label class="form-field"><span>Termék neve <b>*</b></span><input type="text" id="productName" maxlength="80" autocomplete="off" required placeholder="Például tej"></label>
+        <label class="form-field"><span>Helye <b>*</b></span><select id="productLocation" required></select></label>
+        <label class="form-field" id="customLocationField" hidden><span>Saját hely neve</span><input type="text" id="customLocation" maxlength="40" placeholder="Például pince"></label>
+        <label class="form-field"><span>Lejárati vagy ellenőrzési dátum <b>*</b></span><input type="date" id="productExpiry" required></label>
+        <div class="date-shortcuts" aria-label="Gyors dátum">
+          <button type="button" data-date-offset="0">Ma</button><button type="button" data-date-offset="1">Holnap</button><button type="button" data-date-offset="3">+3 nap</button><button type="button" data-date-offset="7">+1 hét</button><button type="button" data-date-offset="14">+2 hét</button><button type="button" data-date-offset="30">+1 hónap</button>
+        </div>
+        <div class="form-row">
+          <label class="form-field"><span>Mennyiség <b>*</b></span><input type="number" id="productQuantity" min="0.001" step="0.001" value="1" inputmode="decimal" required></label>
+          <label class="form-field"><span>Mértékegység</span><select id="productUnit"><option>db</option><option>g</option><option>kg</option><option>ml</option><option>l</option><option>csomag</option><option>doboz</option><option>üveg</option></select></label>
+        </div>
+        <details class="more-details">
+          <summary>További adatok <span>nem kötelező</span></summary>
+          <div class="details-content">
+            <label class="form-field"><span>Márka</span><input type="text" id="productBrand" maxlength="60" placeholder="Például Mizo"></label>
+            <div class="form-row">
+              <label class="form-field"><span>Kategória</span><select id="productCategory"><option>Tejtermék</option><option>Húsáru</option><option>Zöldség</option><option>Gyümölcs</option><option>Pékáru</option><option>Alapélelmiszer</option><option>Ital</option><option>Édesség</option><option>Gyógyszer</option><option>Kozmetikum</option><option>Háztartás</option><option>Egyéb</option></select></label>
+              <label class="form-field"><span>Alkategória</span><input type="text" id="productSubcategory" maxlength="60" placeholder="Például tej"></label>
+            </div>
+            <label class="form-field"><span>Teljes vásárlási érték</span><div class="price-field"><input type="number" id="productPrice" min="0" step="1" inputmode="numeric" placeholder="Például 699"><span>Ft</span></div></label>
+            <label class="form-field"><span>Vásárlás dátuma</span><input type="date" id="purchaseDate"></label>
+            <label class="form-field"><span>Vonalkód</span><input type="text" id="productBarcode" inputmode="numeric" placeholder="Kézi megadás; leolvasó később"></label>
+            <label class="form-field"><span>Megjegyzés</span><textarea id="productNote" rows="3" maxlength="300"></textarea></label>
+          </div>
+        </details>
+        <div class="product-form-actions"><button class="secondary-button" type="button" id="cancelProductForm">Mégsem</button><button class="primary-button save-button" type="submit" id="saveProductButton">Mentés</button></div>
+        <p class="form-help">Az adatokat az alkalmazás ezen az eszközön menti.</p>
+      </form>
+    </section>
+
+    <section class="screen" id="shoppingScreen" data-screen="shopping" hidden>
+      <header class="topbar compact-topbar"><div><h1>Bevásárlólista</h1><p class="subtitle"><span id="shoppingCount">0</span> tétel van hátra</p></div></header>
+      <p class="reorder-explanation">Bármit hozzáadhatsz kézzel. A készletből semmi nem kerül ide automatikusan.</p>
+      <div class="shopping-controls" aria-label="Lista rendezése">
+        <div class="shopping-sort-heading"><span aria-hidden="true">↕</span><strong>Rendezés</strong></div>
+        <div class="shopping-sort-options" role="group" aria-label="Rendezési mód"><button class="is-active" type="button" data-shopping-sort="category" aria-pressed="true">Kategóriák</button><button type="button" data-shopping-sort="name" aria-pressed="false">Név szerint</button></div>
+      </div>
+      <form class="quick-add-shopping always-open" id="shoppingForm">
+        <input type="text" id="shoppingName" maxlength="80" required placeholder="Mit kell venni?">
+        <select id="shoppingCategory" aria-label="Kategória"><option selected>Egyéb</option><option>Alapélelmiszer</option><option>Édesség</option><option>Gyógyszer</option><option>Gyümölcs</option><option>Háztartás</option><option>Húsáru</option><option>Ital</option><option>Kozmetikum</option><option>Pékáru</option><option>Tejtermék</option><option>Zöldség</option></select>
+        <button type="submit">Hozzáadás</button>
+      </form>
+      <div class="shopping-list" id="shoppingList"></div>
+      <details class="completed-shopping"><summary>Megvásárolva (<span id="completedCount">0</span>)</summary><p class="completed-shopping-help">Ezek nem kerülnek automatikusan a készletbe. Az × gombbal bármikor törölheted őket.</p><div id="completedItems"></div></details>
+    </section>
+
+    <section class="screen" id="statsScreen" data-screen="stats" hidden>
+      <header class="topbar compact-topbar"><div><p class="eyebrow">Valódi eseményekből</p><h1>Statisztika</h1><p class="subtitle">Csak azt számoljuk, amit ténylegesen rögzítettél.</p></div></header>
+      <div class="stat-grid">
+        <article class="stat-card"><span>Heti kidobott érték</span><strong id="weeklyWasteValue">0 Ft</strong><small>az eseménynaplóból</small></article>
+        <article class="stat-card"><span>Havi kidobott érték</span><strong id="monthlyWasteValue">0 Ft</strong><small><span id="monthlyWasteCount">0</span> esemény</small></article>
+        <article class="stat-card positive"><span>Időben felhasználva</span><strong id="monthlyConsumedValue">0</strong><small>ebben a hónapban</small></article>
+      </div>
+      <section class="chart-card" aria-labelledby="weeklyChartTitle">
+        <div class="section-heading"><div><p class="section-kicker">Hétfőtől vasárnapig</p><h2 id="weeklyChartTitle">Heti veszteség</h2></div><small id="weeklyChartSummary">0 Ft</small></div>
+        <div class="bar-chart" id="weeklyWasteChart" role="img" aria-label="A heti kidobási veszteség napokra bontva"></div>
+      </section>
+      <section class="comparison-grid" aria-label="Összehasonlítás korábbi időszakokkal">
+        <article class="comparison-card" id="weeklyComparisonCard"><span>Heti összevetés</span><strong id="weeklyComparisonText">Nincs változás</strong><small id="weeklyComparisonValues">Most 0 Ft · korábban 0 Ft</small></article>
+        <article class="comparison-card" id="monthlyComparisonCard"><span>Havi összevetés</span><strong id="monthlyComparisonText">Nincs változás</strong><small id="monthlyComparisonValues">Most 0 Ft · korábban 0 Ft</small></article>
+      </section>
+      <section class="content-section top-waste" aria-labelledby="discardedTitle">
+        <div class="section-heading"><div><p class="section-kicker">Kidobott mennyiségek</p><h2 id="discardedTitle">Ebben a hónapban</h2></div></div>
+        <div id="discardedList"></div>
+      </section>
+    </section>
+
+    <section class="screen" id="settingsScreen" data-screen="settings" hidden>
+      <header class="topbar compact-topbar"><div><p class="eyebrow">Beállítások</p><h1>Helyi működés</h1><p class="subtitle">A MiMeddig fiók és internet nélkül is használható.</p></div><button class="icon-button" type="button" data-go-screen="home" aria-label="Bezárás">×</button></header>
+      <section class="offline-status"><span class="offline-icon">✓</span><div><p class="section-kicker">Offline-first</p><h2>Az adataid ezen az eszközön</h2><p>A készlet, a bevásárlólista és a pazarlási napló IndexedDB-ben marad meg.</p></div></section>
+      <section class="settings-group"><div class="section-heading"><div><p class="section-kicker">Előkészítve</p><h2>Későbbi beállítások</h2></div></div>
+        <button class="settings-row" type="button" data-demo-message="Az értesítések egy későbbi fejlesztési szakaszban kapcsolhatók be."><span class="settings-row-icon">♢</span><span><strong>Lejárati értesítések</strong><small>Még nincs bekapcsolva</small></span><b>›</b></button>
+        <button class="settings-row" type="button" data-demo-message="A működő változat nyelve jelenleg magyar, pénzneme forint."><span class="settings-row-icon">Ft</span><span><strong>Nyelv és pénznem</strong><small>Magyar · HUF</small></span><b>›</b></button>
+      </section>
+      <section class="settings-group"><div class="section-heading"><div><p class="section-kicker">Opcionális, később</p><h2>Felhőmentés és szinkronizálás</h2></div></div><div class="cloud-setting-card"><div class="cloud-setting-head"><span class="settings-row-icon">☁</span><div><strong>Kikapcsolva</strong><small>A helyi használathoz nem szükséges</small></div><span class="prototype-switch"><i></i></span></div><p>A későbbi felhőmodul ehhez a helyi adattárolási réteghez kapcsolódhat.</p><span class="coming-soon">Későbbi funkció</span></div></section>
+    </section>
+
+    <nav class="bottom-nav" aria-label="Fő navigáció">
+      <button class="nav-item is-active" type="button" data-nav-screen="home"><span>⌂</span><small>Kezdőlap</small></button>
+      <button class="nav-item" type="button" data-nav-screen="inventory"><span>▦</span><small>Készletek</small></button>
+      <button class="nav-item add-nav" type="button" data-nav-screen="add"><span>＋</span><small>Új termék</small></button>
+      <button class="nav-item" type="button" data-nav-screen="shopping"><span>✓</span><small>Lista</small></button>
+      <button class="nav-item" type="button" data-nav-screen="stats"><span>▥</span><small>Statisztika</small></button>
+    </nav>
+  </main>
+
+  <div class="action-sheet-backdrop" id="quantityBackdrop" hidden></div>
+  <section class="action-sheet quantity-sheet" id="quantitySheet" role="dialog" aria-modal="true" aria-labelledby="quantityTitle" hidden>
+    <div class="sheet-handle"></div><p class="section-kicker" id="quantityKicker">Készlet frissítése</p><h2 id="quantityTitle">Mi történt a mennyiséggel?</h2><p class="sheet-help">A fennmaradó rész a jelenlegi helyén marad.</p>
+    <div class="quantity-split-grid">
+      <label class="quantity-consumed"><span class="quantity-action-label"><i aria-hidden="true">✓</i><b>Felhasználtam</b></span><span class="quantity-input-group"><input id="consumedAmount" type="number" min="0" step="0.1" value="0" inputmode="decimal"><select id="consumedUnit"></select></span></label>
+      <label class="quantity-frozen"><span class="quantity-action-label"><i aria-hidden="true">❄</i><b>Lefagyasztottam</b></span><span class="quantity-input-group"><input id="frozenAmount" type="number" min="0" step="0.1" value="0" inputmode="decimal"><select id="frozenUnit"></select></span></label>
+      <label class="quantity-discarded"><span class="quantity-action-label"><i aria-hidden="true">!</i><b>Kidobtam</b></span><span class="quantity-input-group"><input id="discardedAmount" type="number" min="0" step="0.1" value="0" inputmode="decimal"><select id="discardedUnit"></select></span></label>
+    </div>
+    <div class="quantity-remaining" id="quantityRemaining"></div><div class="live-waste-estimate" id="liveWasteEstimate" hidden></div><p class="quantity-error" id="quantityError" hidden></p>
+    <button class="sheet-action primary" type="button" id="saveQuantitySplit">Mentés</button><button class="sheet-action" type="button" id="closeQuantitySheet">Mégsem</button>
+  </section>
+
+  <div class="action-sheet-backdrop" id="purchaseBackdrop" hidden></div>
+  <section class="action-sheet purchase-sheet" id="purchaseSheet" role="dialog" aria-modal="true" aria-labelledby="purchaseTitle" hidden>
+    <div class="sheet-handle"></div><span class="purchase-success">✓</span><p class="section-kicker">Megvetted</p><h2 id="purchaseTitle"><span id="purchasedItemName"></span> kerüljön a készletbe?</h2><p class="sheet-help">Az adatokat előkészítjük, a lejáratot neked kell megadnod.</p>
+    <button class="sheet-action primary" type="button" id="addPurchasedToInventory">Igen, hozzáadom</button><button class="sheet-action" type="button" id="onlyCheckShoppingItem">Csak kipipálom</button><button class="sheet-action sheet-cancel" type="button" id="cancelPurchase">Mégsem</button>
+  </section>
+
+  <dialog class="app-dialog" id="confirmDialog"><form method="dialog"><h2 id="confirmTitle">Biztos vagy benne?</h2><p id="confirmMessage"></p><div class="dialog-actions"><button value="cancel">Mégsem</button><button class="danger-button" value="confirm">Igen, törlöm</button></div></form></dialog>
+  <dialog class="app-dialog" id="shoppingEditDialog"><form id="shoppingEditForm"><h2>Listaelem szerkesztése</h2><input type="hidden" id="shoppingEditId"><label class="form-field"><span>Név</span><input id="shoppingEditName" required></label><label class="form-field"><span>Kategória</span><select id="shoppingEditCategory"><option>Egyéb</option><option>Alapélelmiszer</option><option>Édesség</option><option>Gyógyszer</option><option>Gyümölcs</option><option>Háztartás</option><option>Húsáru</option><option>Ital</option><option>Kozmetikum</option><option>Pékáru</option><option>Tejtermék</option><option>Zöldség</option></select></label><div class="form-row"><label class="form-field"><span>Mennyiség</span><input type="number" id="shoppingEditQuantity" min="0.001" step="0.001" required></label><label class="form-field"><span>Egység</span><select id="shoppingEditUnit"><option>db</option><option>g</option><option>kg</option><option>ml</option><option>l</option><option>csomag</option><option>doboz</option><option>üveg</option></select></label></div><label class="form-field"><span>Megjegyzés</span><input id="shoppingEditNote"></label><div class="dialog-actions"><button type="button" id="cancelShoppingEdit">Mégsem</button><button class="primary-button" type="submit">Mentés</button></div></form></dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden><span id="toastMessage"></span><button type="button" id="toastUndo" hidden>Visszavonás</button></div>
+  <script type="module" src="js/app.js?v=22"></script>
+</body>
+</html>
