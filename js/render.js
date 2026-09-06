@@ -101,8 +101,8 @@ function rescueCard(batch) {
 function locationIcon(kind) {
   const icons = {
     fridge: `<rect x="6" y="2.75" width="12" height="18.5" rx="3"/><path d="M6 10h12M9.25 6.2v1.9M9.25 13.2v3"/>`,
-    freezer: `<path class="location-icon-soft" d="M12 3.2a8.8 8.8 0 1 0 0 17.6 8.8 8.8 0 0 0 0-17.6Z"/><path d="M12 6.6v10.8M7.3 9.3l9.4 5.4M7.3 14.7l9.4-5.4M12 6.6l-1.45 1.45M12 6.6l1.45 1.45M12 17.4l-1.45-1.45M12 17.4l1.45-1.45M7.3 9.3l1.98.53M7.3 9.3l.53-1.98M16.7 14.7l-1.98-.53M16.7 14.7l-.53 1.98"/>`,
-    pantry: `<rect x="3.5" y="4" width="17" height="16" rx="2.5"/><path d="M3.5 10.2h17M9.1 7.15h.1M14.8 7.15h.1M8 13.2h3v4H8zM14 12.5h2.8v4.7H14z"/>`,
+    freezer: `<rect x="5" y="2.5" width="14" height="19" rx="3"/><path class="location-icon-soft" d="M5 8.5h14v10a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3v-10Z"/><path d="M5 8.5h14M8.2 5.25v1.4M12 11.5v7M9 13.25l6 3.5M9 16.75l6-3.5M12 11.5l-1 1M12 11.5l1 1M12 18.5l-1-1M12 18.5l1-1"/>`,
+    pantry: `<path class="location-icon-soft" d="M5.2 9.8h8v10.7h-8zM14.8 11.8h4.2v8.7h-4.2z"/><path d="M4.5 6.5h9.4M5.8 6.5v2l-.9 1.3v8.7a2 2 0 0 0 2 2h4.6a2 2 0 0 0 2-2V9.8l-.9-1.3v-2M7.1 13h4.2v3.8H7.1zM14.2 9.2h5.4M14.9 9.2v2l-.7 1v6.6a1.7 1.7 0 0 0 1.7 1.7h2a1.7 1.7 0 0 0 1.7-1.7v-6.6l-.7-1v-2M16 14.3h1.8"/>`,
     bath: `<path class="location-icon-soft" d="M3.3 12.2h17.4v2.1a5.2 5.2 0 0 1-5.2 5.2h-7a5.2 5.2 0 0 1-5.2-5.2v-2.1Z"/><path d="M3 12.2h18M6.2 12.2V7.8a3.3 3.3 0 0 1 6.2-1.55M6.1 19.5l-.8 1.4M17.9 19.5l.8 1.4M15.8 6.1h.1M18.1 8h.1"/>`,
     medicine: `<path class="location-icon-soft" d="m8.1 10.3 5.6 5.6-1.2 1.2a4 4 0 0 1-5.6-5.6l1.2-1.2Z"/><path d="M6.9 17.1a4 4 0 0 1 0-5.6l4.6-4.6a4 4 0 0 1 5.6 5.6l-4.6 4.6a4 4 0 0 1-5.6 0ZM8.1 10.3l5.6 5.6"/><circle cx="18.2" cy="6.1" r="2.1"/>`,
     cosmetics: `<path d="M4.2 11h5.2v10H4.2zM5.1 11V7.8l3.2-2.7V11M4.2 15.2h5.2"/><path class="location-icon-soft" d="M11.2 14.1c2.3-2.8 4.1-2.8 5.4-.7 1.4-1.8 3.2-.9 4.6.7-2.1 4.2-7.4 4.2-10 0Z"/><path d="M11.2 14.1c2.3-2.8 4.1-2.8 5.4-.7 1.4-1.8 3.2-.9 4.6.7-2.1 4.2-7.4 4.2-10 0ZM12.2 14.4c2.8.8 5.3.8 8 0"/>`,
