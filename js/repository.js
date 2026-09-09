@@ -2,6 +2,8 @@ import { STORES, getAll, getOne, putOne, runTransaction } from "./db.js?v=10";
 import { createId, normalizeText, nowIso, todayIso, toBaseQuantity, validateAllocation, valueForQuantity } from "./domain.js?v=22";
 
 const ACTIVE_STATUS = "active";
+const SETTINGS_VERSION = 3;
+const DEFAULT_LOCATIONS = ["Hűtő", "Fagyasztó", "Kamra", "Fürdő", "Gyógyszerek", "Kozmetikumok", "Tisztítószerek", "Autó / garázs"];
 
 function withSyncFields(previous = {}) {
   previous = previous || {};
@@ -16,22 +18,33 @@ function withSyncFields(previous = {}) {
 
 export async function ensureDefaultSettings() {
   const current = await getOne(STORES.settings, "app");
-  if (current) return current;
+  if (current) {
+    const currentLocations = Array.isArray(current.defaultLocations) ? current.defaultLocations : [];
+    const mergedLocations = [...new Set([...currentLocations, ...DEFAULT_LOCATIONS])];
+    const needsUpdate = Number(current.databaseVersion) < SETTINGS_VERSION || mergedLocations.length !== currentLocations.length;
+    if (!needsUpdate) return current;
+    return putOne(STORES.settings, {
+      ...current,
+      databaseVersion: Math.max(Number(current.databaseVersion) || 0, SETTINGS_VERSION),
+      defaultLocations: mergedLocations,
+      ...withSyncFields(current)
+    });
+  }
   return putOne(STORES.settings, {
     key: "app",
     displayName: "Erika",
     language: "hu",
     currency: "HUF",
-    databaseVersion: 2,
+    databaseVersion: SETTINGS_VERSION,
     notifications: { enabled: false, reminderDays: [3, 1, 0], time: "09:00" },
-    defaultLocations: ["Hűtő", "Fagyasztó", "Kamra", "Fürdő", "Gyógyszerek", "Kozmetikumok"],
+    defaultLocations: DEFAULT_LOCATIONS,
     cloudSync: { enabled: false, provider: null },
     ...withSyncFields()
   });
 }
 
 export async function getSettings() {
-  return (await getOne(STORES.settings, "app")) || ensureDefaultSettings();
+  return ensureDefaultSettings();
 }
 
 export async function saveSettings(changes) {

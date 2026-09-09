@@ -101,11 +101,13 @@ function rescueCard(batch) {
 function locationIcon(kind) {
   const icons = {
     fridge: `<rect x="6" y="2.75" width="12" height="18.5" rx="3"/><path d="M6 10h12M9.25 6.2v1.9M9.25 13.2v3"/>`,
-    freezer: `<rect x="5" y="2.5" width="14" height="19" rx="3"/><path class="location-icon-soft" d="M5 8.5h14v10a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3v-10Z"/><path d="M5 8.5h14M8.2 5.25v1.4M12 11.5v7M9 13.25l6 3.5M9 16.75l6-3.5M12 11.5l-1 1M12 11.5l1 1M12 18.5l-1-1M12 18.5l1-1"/>`,
+    freezer: `<path d="M12 3v18M4.2 7.5l15.6 9M4.2 16.5l15.6-9M12 3l-2 2M12 3l2 2M12 21l-2-2M12 21l2-2M4.2 7.5l2.7.4M4.2 7.5 5 10M19.8 16.5l-2.7-.4M19.8 16.5 19 14M4.2 16.5l2.7-.4M4.2 16.5 5 14M19.8 7.5l-2.7.4M19.8 7.5 19 10"/>`,
     pantry: `<path class="location-icon-soft" d="M5.2 9.8h8v10.7h-8zM14.8 11.8h4.2v8.7h-4.2z"/><path d="M4.5 6.5h9.4M5.8 6.5v2l-.9 1.3v8.7a2 2 0 0 0 2 2h4.6a2 2 0 0 0 2-2V9.8l-.9-1.3v-2M7.1 13h4.2v3.8H7.1zM14.2 9.2h5.4M14.9 9.2v2l-.7 1v6.6a1.7 1.7 0 0 0 1.7 1.7h2a1.7 1.7 0 0 0 1.7-1.7v-6.6l-.7-1v-2M16 14.3h1.8"/>`,
     bath: `<path class="location-icon-soft" d="M3.3 12.2h17.4v2.1a5.2 5.2 0 0 1-5.2 5.2h-7a5.2 5.2 0 0 1-5.2-5.2v-2.1Z"/><path d="M3 12.2h18M6.2 12.2V7.8a3.3 3.3 0 0 1 6.2-1.55M6.1 19.5l-.8 1.4M17.9 19.5l.8 1.4M15.8 6.1h.1M18.1 8h.1"/>`,
-    medicine: `<path class="location-icon-soft" d="m8.1 10.3 5.6 5.6-1.2 1.2a4 4 0 0 1-5.6-5.6l1.2-1.2Z"/><path d="M6.9 17.1a4 4 0 0 1 0-5.6l4.6-4.6a4 4 0 0 1 5.6 5.6l-4.6 4.6a4 4 0 0 1-5.6 0ZM8.1 10.3l5.6 5.6"/><circle cx="18.2" cy="6.1" r="2.1"/>`,
-    cosmetics: `<path d="M4.2 11h5.2v10H4.2zM5.1 11V7.8l3.2-2.7V11M4.2 15.2h5.2"/><path class="location-icon-soft" d="M11.2 14.1c2.3-2.8 4.1-2.8 5.4-.7 1.4-1.8 3.2-.9 4.6.7-2.1 4.2-7.4 4.2-10 0Z"/><path d="M11.2 14.1c2.3-2.8 4.1-2.8 5.4-.7 1.4-1.8 3.2-.9 4.6.7-2.1 4.2-7.4 4.2-10 0ZM12.2 14.4c2.8.8 5.3.8 8 0"/>`,
+    medicine: `<path class="location-icon-soft" d="M6.2 17.8a4.7 4.7 0 0 1 0-6.6l5-5a4.7 4.7 0 0 1 6.6 6.6l-5 5a4.7 4.7 0 0 1-6.6 0Z"/><path d="M6.2 17.8a4.7 4.7 0 0 1 0-6.6l5-5a4.7 4.7 0 0 1 6.6 6.6l-5 5a4.7 4.7 0 0 1-6.6 0ZM8.7 8.7l6.6 6.6"/>`,
+    cosmetics: `<path d="M3 11h5v10H3zM4 11V7.7l3-2.5V11M3 15h5"/><path class="location-icon-soft" d="M8.8 13.2c3.2-4.1 5.8-4 7.4-1 1.9-2.5 4.1-1.3 5.8 1-2.7 5.6-9.8 5.6-13.2 0Z"/><path d="M8.8 13.2c3.2-4.1 5.8-4 7.4-1 1.9-2.5 4.1-1.3 5.8 1-2.7 5.6-9.8 5.6-13.2 0ZM10 13.7c3.8 1.1 7.2 1.1 10.8 0"/>`,
+    cleaning: `<path class="location-icon-soft" d="M7 10.5h8.5l2 3V21H5v-7.5l2-3Z"/><path d="M8 10.5V7h5l1.8-2H20v3h-4.7L13 7M5 14h12.5M8.5 17h5.5M20 11.5h1M20.5 11v1"/>`,
+    garage: `<path class="location-icon-soft" d="M5 10.5h14l2 4v3H3v-3l2-4Z"/><path d="m5 10.5 2-4h10l2 4 2 4v3h-2M3 17.5v-3l2-4h14M7 17.5h10M7 17.5a2 2 0 1 1-4 0 2 2 0 0 1 4 0ZM21 17.5a2 2 0 1 1-4 0 2 2 0 0 1 4 0ZM8 13h.1M16 13h.1"/>`,
     custom: `<path class="location-icon-soft" d="M12 21s6-5.15 6-11a6 6 0 1 0-12 0c0 5.85 6 11 6 11Z"/><path d="M12 21s6-5.15 6-11a6 6 0 1 0-12 0c0 5.85 6 11 6 11ZM9.5 10.2 12 8l2.5 2.2v3.1h-5v-3.1Z"/>`,
     add: `<rect x="3.5" y="3.5" width="17" height="17" rx="5"/><path d="M12 8v8M8 12h8"/>`,
     all: `<rect x="4" y="4" width="6" height="6" rx="1.5"/><rect x="14" y="4" width="6" height="6" rx="1.5"/><rect x="4" y="14" width="6" height="6" rx="1.5"/><rect x="14" y="14" width="6" height="6" rx="1.5"/>`
@@ -120,7 +122,9 @@ function locationAppearance(location) {
     "Kamra": ["location-pantry", "pantry"],
     "Fürdő": ["location-bath", "bath"],
     "Gyógyszerek": ["location-medicine", "medicine"],
-    "Kozmetikumok": ["location-cosmetics", "cosmetics"]
+    "Kozmetikumok": ["location-cosmetics", "cosmetics"],
+    "Tisztítószerek": ["location-cleaning", "cleaning"],
+    "Autó / garázs": ["location-garage", "garage"]
   };
   const [tone, kind] = appearances[location] || ["location-custom", "custom"];
   return [tone, locationIcon(kind)];
