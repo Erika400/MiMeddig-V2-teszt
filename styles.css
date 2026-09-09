@@ -917,7 +917,12 @@ body {
 .location-bath { background: linear-gradient(145deg, #f5f1f5, #e9e1ec); }
 .location-medicine { background: linear-gradient(145deg, #fcf3ef, #f2e2dc); }
 .location-cosmetics { background: linear-gradient(145deg, #fbf1f3, #f0e1e7); }
+.location-cleaning { --location-accent: #3f7770; background: linear-gradient(145deg, #edf7f4, #dcece7); }
+.location-garage { --location-accent: #806348; background: linear-gradient(145deg, #f8f2e9, #eadfce); }
 .location-icon { background: rgba(255,253,248,.82); box-shadow: 0 5px 13px rgba(75, 62, 48, .09); }
+
+.location-cleaning .location-name,
+.location-garage .location-name { font-size: 12px; letter-spacing: -.035em; white-space: nowrap; }
 
 .shopping-preview {
   border-left-color: #dda44b;
@@ -965,3 +970,8 @@ body {
 .nav-inventory-icon,
 .nav-stats-icon { fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .add-nav > span { border-color: var(--shell); background: linear-gradient(145deg, #e98465, #cf624a); }
+
+@media (max-width: 355px) {
+  .location-cleaning .location-name,
+  .location-garage .location-name { font-size: 10.5px; }
+}
