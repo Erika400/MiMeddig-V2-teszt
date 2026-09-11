@@ -29,7 +29,7 @@ import {
   saveShoppingItem,
   setShoppingPurchased,
   undoQuantityAllocation
-} from "./repository.js?v=23";
+} from "./repository.js?v=24";
 import {
   escapeHtml,
   fullProductName,
@@ -38,7 +38,7 @@ import {
   renderProductDetail,
   renderShopping,
   renderStatistics
-} from "./render.js?v=28";
+} from "./render.js?v=29";
 
 const state = {
   batches: [],

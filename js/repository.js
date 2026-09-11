@@ -2,8 +2,9 @@ import { STORES, getAll, getOne, putOne, runTransaction } from "./db.js?v=10";
 import { createId, normalizeText, nowIso, todayIso, toBaseQuantity, validateAllocation, valueForQuantity } from "./domain.js?v=22";
 
 const ACTIVE_STATUS = "active";
-const SETTINGS_VERSION = 3;
-const DEFAULT_LOCATIONS = ["Hűtő", "Fagyasztó", "Kamra", "Fürdő", "Gyógyszerek", "Kozmetikumok", "Tisztítószerek", "Autó / garázs"];
+const SETTINGS_VERSION = 4;
+const DEFAULT_LOCATIONS = ["Hűtő", "Fagyasztó", "Kamra", "Fürdő", "Gyógyszerek", "Autó / garázs"];
+const CATEGORY_LIKE_LOCATIONS = new Set(["Kozmetikumok", "Tisztítószerek"]);
 
 function withSyncFields(previous = {}) {
   previous = previous || {};
@@ -20,8 +21,9 @@ export async function ensureDefaultSettings() {
   const current = await getOne(STORES.settings, "app");
   if (current) {
     const currentLocations = Array.isArray(current.defaultLocations) ? current.defaultLocations : [];
-    const mergedLocations = [...new Set([...currentLocations, ...DEFAULT_LOCATIONS])];
-    const needsUpdate = Number(current.databaseVersion) < SETTINGS_VERSION || mergedLocations.length !== currentLocations.length;
+    const retainedLocations = currentLocations.filter((location) => !CATEGORY_LIKE_LOCATIONS.has(location));
+    const mergedLocations = [...new Set([...retainedLocations, ...DEFAULT_LOCATIONS])];
+    const needsUpdate = Number(current.databaseVersion) < SETTINGS_VERSION || mergedLocations.join("|") !== currentLocations.join("|");
     if (!needsUpdate) return current;
     return putOne(STORES.settings, {
       ...current,
