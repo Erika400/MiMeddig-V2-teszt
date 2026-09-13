@@ -1,13 +1,17 @@
-const CACHE_NAME = "mimeddig-v2-shell-34";
+const CACHE_NAME = "mimeddig-v2-shell-43";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./styles.css?v=28",
-  "./js/app.js?v=29",
-  "./js/db.js?v=10",
-  "./js/domain.js?v=22",
-  "./js/render.js?v=29",
-  "./js/repository.js?v=24",
+  "./styles.css?v=32",
+  "./js/app.js?v=36",
+  "./js/db.js?v=11",
+  "./js/domain.js?v=23",
+  "./js/render.js?v=33",
+  "./js/repository.js?v=25",
+  "./js/external-product-lookup.js?v=1",
+  "./js/local-product-cache.js?v=1",
+  "./js/product-catalog.js?v=2",
+  "./js/scanner.js?v=1",
   "./manifest.webmanifest",
   "./icon.svg"
 ];

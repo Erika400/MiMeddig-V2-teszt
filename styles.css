@@ -24,7 +24,7 @@
 
 body {
   margin: 0;
-  min-width: 320px;
+  min-width: 0;
   min-height: 100vh;
   background:
     radial-gradient(circle at 12% 8%, rgba(255, 223, 155, 0.55) 0 5%, transparent 26%),
@@ -331,6 +331,10 @@ h2 { margin-bottom: 0; font-size: 19px; line-height: 1.25; letter-spacing: -0.02
 .prototype-switch { position: relative; width: 42px; height: 25px; border-radius: 99px; background: #d9d2cb; }
 .prototype-switch i { position: absolute; top: 3px; left: 3px; width: 19px; height: 19px; border-radius: 50%; background: white; box-shadow: 0 2px 5px rgba(40, 31, 24, 0.18); }
 .coming-soon { display: inline-block; padding: 5px 9px; border-radius: 99px; background: var(--surface-warm); color: var(--coral-dark); font-size: 10px; font-weight: 850; }
+.data-source-note { margin: 18px 4px 0; color: var(--muted); font-size: 11px; line-height: 1.5; }
+.data-source-note summary { width: max-content; cursor: pointer; font-weight: 750; }
+.data-source-note p { margin: 8px 0 0; }
+.data-source-note a { color: var(--sage); font-weight: 800; }
 
 /* V4 – karakteresebb, modern és otthonos MiMeddig-arculat */
 .prototype-note { color: #405a4e; }
@@ -785,7 +789,16 @@ h2 { margin-bottom: 0; font-size: 19px; line-height: 1.25; letter-spacing: -0.02
 
 /* Karakteresebb, de nyugodt műveleti jelzések */
 .rescue-card::after { width: 11px; height: 11px; box-shadow: 0 0 0 3px rgba(255,255,255,.78); }
-.rescue-actions button { display: flex; align-items: center; justify-content: center; gap: 5px; }
+.rescue-actions button {
+  display: flex;
+  min-height: 58px;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 3px;
+  overflow-wrap: anywhere;
+  text-align: center;
+}
 .rescue-actions button::before { display: inline-grid; width: 20px; height: 20px; flex: 0 0 20px; border-radius: 7px; place-items: center; font-size: 12px; font-weight: 950; }
 .rescue-actions [data-quick-status="consumed"]::before { background: #cfe7d6; content: "✓"; }
 .rescue-actions [data-quick-status="frozen"]::before { background: #d7e9ef; content: "❄"; }
@@ -974,4 +987,117 @@ body {
 @media (max-width: 355px) {
   .location-cleaning .location-name,
   .location-garage .location-name { font-size: 10.5px; }
+}
+
+/* Vonalkódos gyorsfelvitel */
+.scanner-screen { background: linear-gradient(180deg, #f7f4ec 0%, #f2f4ed 100%); }
+.scanner-card,
+.barcode-entry,
+.barcode-result {
+  border: 1px solid #e2dbcf;
+  border-radius: 22px 22px 22px 10px;
+  background: var(--surface);
+  box-shadow: 0 10px 25px rgba(70, 57, 42, .08);
+}
+.scanner-card { padding: 13px; }
+.scanner-viewfinder {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 4 / 3;
+  border-radius: 17px;
+  background: linear-gradient(145deg, #27473b, #182d25);
+}
+.scanner-viewfinder video { width: 100%; height: 100%; object-fit: cover; }
+.scanner-placeholder {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 12px;
+  padding: 24px;
+  color: #e9f1eb;
+  font-size: 13px;
+  font-weight: 750;
+  text-align: center;
+}
+.scanner-placeholder[hidden] { display: none; }
+.scanner-placeholder .symbol-icon { width: 48px; height: 48px; color: #ffd995; }
+.scanner-frame {
+  position: absolute;
+  z-index: 2;
+  top: 50%;
+  left: 50%;
+  width: 78%;
+  height: 39%;
+  border: 2px solid rgba(255, 226, 169, .85);
+  border-radius: 14px;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+.scanner-frame i {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  left: 8px;
+  height: 2px;
+  background: var(--coral);
+  box-shadow: 0 0 12px rgba(227,109,86,.7);
+}
+.scanner-camera-button,
+.barcode-entry .primary-button { width: 100%; min-height: 48px; margin-top: 11px; border: 0; border-radius: 14px; }
+.scanner-camera-button:disabled { opacity: .55; }
+.scanner-support,
+.scanner-status,
+.off-attribution { color: var(--muted); font-size: 11px; line-height: 1.5; }
+.scanner-support { margin: 9px 3px 0; text-align: center; }
+.scanner-divider { display: flex; align-items: center; gap: 10px; margin: 16px 0; color: #958a7e; font-size: 11px; text-transform: uppercase; }
+.scanner-divider::before,
+.scanner-divider::after { flex: 1; height: 1px; background: #ded8cd; content: ""; }
+.barcode-entry { padding: 14px; }
+.barcode-entry .form-field { margin-bottom: 0; }
+.scanner-status { min-height: 18px; margin: 11px 2px; font-weight: 700; }
+.barcode-result {
+  display: grid;
+  grid-template-columns: 68px minmax(0, 1fr);
+  gap: 13px;
+  padding: 15px;
+}
+.barcode-result[hidden] { display: none; }
+.barcode-result img { width: 68px; height: 68px; border-radius: 15px; background: #f1eee7; object-fit: contain; }
+.barcode-result-copy { min-width: 0; }
+.barcode-result-copy h2 { overflow-wrap: anywhere; font-size: 17px; }
+.barcode-result-copy > p:not(.section-kicker) { margin: 5px 0; color: var(--muted); font-size: 12px; }
+.barcode-result-copy > small { display: block; color: var(--muted); font-size: 10px; line-height: 1.45; }
+.barcode-result-actions,
+.barcode-result > #addUnknownBarcode { grid-column: 1 / -1; }
+.barcode-result-actions { display: grid; grid-template-columns: 1.2fr .8fr; gap: 8px; }
+.barcode-result-actions button,
+.barcode-result > #addUnknownBarcode { min-height: 46px; border: 1px solid var(--border); border-radius: 13px; background: var(--surface-warm); font-weight: 800; }
+.barcode-result-actions .primary-button,
+.barcode-result > #addUnknownBarcode { border: 0; background: var(--sage); color: white; }
+.off-attribution { margin: 13px 4px 0; }
+.off-attribution a { color: var(--sage); font-weight: 800; }
+.recognized-product-note {
+  display: grid;
+  grid-template-columns: 37px minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 15px;
+  padding: 12px;
+  border: 1px solid #cfe0d4;
+  border-radius: 16px;
+  background: linear-gradient(145deg, #edf7f0, #e4f0e8);
+}
+.recognized-product-note[hidden] { display: none; }
+.recognized-product-note > span { display: grid; width: 34px; height: 34px; border-radius: 11px; background: var(--sage); color: white; place-items: center; font-weight: 900; }
+.recognized-product-note strong,
+.recognized-product-note small { display: block; }
+.recognized-product-note strong { font-size: 13px; }
+.recognized-product-note small { margin-top: 3px; color: var(--muted); font-size: 10px; line-height: 1.4; }
+
+@media (max-width: 355px) {
+  .barcode-result { grid-template-columns: 56px minmax(0, 1fr); padding: 12px; }
+  .barcode-result img { width: 56px; height: 56px; }
+  .barcode-result-actions { grid-template-columns: 1fr; }
 }
