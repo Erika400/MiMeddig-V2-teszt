@@ -1,4 +1,4 @@
-import { lookupOpenFoodFacts } from "./external-product-lookup.js?v=1";
+import { lookupOpenFoodFacts } from "./external-product-lookup.js?v=2";
 import { cacheProduct, confirmCachedProduct, getCachedProduct, getLocalCatalogProduct, saveLocalCatalogProduct } from "./local-product-cache.js?v=1";
 
 export function normalizeBarcode(value) {
@@ -10,7 +10,7 @@ export function normalizeBarcode(value) {
 export function inventoryDefaultsFromCatalog(product) {
   const quantity = Number(product?.packageQuantity);
   const unit = product?.packageUnit;
-  const supportedUnits = new Set(["g", "kg", "ml", "l", "db", "csomag", "doboz", "üveg"]);
+  const supportedUnits = new Set(["g", "dkg", "kg", "oz", "lb", "ml", "cl", "l", "fl oz", "db", "csomag", "doboz", "üveg"]);
   if (Number.isFinite(quantity) && quantity > 0 && supportedUnits.has(unit)) return { quantity, unit };
   return { quantity: 1, unit: "db" };
 }

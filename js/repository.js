@@ -1,5 +1,5 @@
 import { STORES, getAll, getOne, putOne, runTransaction } from "./db.js?v=11";
-import { createId, normalizeText, nowIso, todayIso, toBaseQuantity, validateAllocation, valueForQuantity } from "./domain.js?v=22";
+import { createId, normalizeText, nowIso, todayIso, toBaseQuantity, validateAllocation, valueForQuantity } from "./domain.js?v=25";
 
 const ACTIVE_STATUS = "active";
 const SETTINGS_VERSION = 4;
@@ -107,6 +107,7 @@ export async function saveProduct(formData, existingBatchId = null) {
     baseUnit: formData.baseUnit,
     displayUnit: formData.unit,
     lastPrice: Math.max(0, Number(formData.totalPrice) || 0),
+    lastPriceCurrency: formData.currency || existingTemplate?.lastPriceCurrency || "HUF",
     barcode,
     packageQuantity,
     packageUnit,
@@ -130,6 +131,7 @@ export async function saveProduct(formData, existingBatchId = null) {
     baseUnit: formData.baseUnit,
     displayUnit: formData.unit,
     totalPriceAtPurchase: Math.max(0, Number(formData.totalPrice) || 0),
+    currency: formData.currency || existingBatch?.currency || "HUF",
     expiryDate: formData.expiryDate,
     purchaseDate: existingBatch?.purchaseDate || existingBatch?.createdAt?.slice(0, 10) || todayIso(),
     frozenAt: existingBatch?.frozenAt || null,
@@ -152,6 +154,7 @@ export async function saveProduct(formData, existingBatchId = null) {
         baseUnit: batch.baseUnit,
         displayUnit: batch.displayUnit,
         financialValue: 0,
+        financialCurrency: batch.currency,
         occurredAt: timestamp,
         createdAt: timestamp,
         deletedAt: null
@@ -178,6 +181,7 @@ export async function deleteBatch(batchId) {
       baseUnit: batch.baseUnit,
       displayUnit: batch.displayUnit,
       financialValue: 0,
+      financialCurrency: batch.currency || "HUF",
       occurredAt: nowIso(),
       createdAt: nowIso(),
       deletedAt: null
@@ -232,6 +236,7 @@ export async function applyQuantityAllocation(batchId, allocation) {
       baseUnit: batch.baseUnit,
       displayUnit: batch.displayUnit,
       financialValue,
+      financialCurrency: batch.currency || "HUF",
       occurredAt,
       createdAt: occurredAt,
       deletedAt: null

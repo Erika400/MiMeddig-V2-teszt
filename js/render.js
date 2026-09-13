@@ -4,7 +4,7 @@ import {
   formatMoney,
   formatQuantity,
   parseLocalDate
-} from "./domain.js?v=22";
+} from "./domain.js?v=25";
 
 export function escapeHtml(value = "") {
   return String(value)
@@ -219,7 +219,7 @@ export function renderProductDetail(batch, settings) {
   const values = [
     ["Mennyiség", formatQuantity(batch.quantityBase, batch.displayUnit)],
     ["Kiszerelés", packageText],
-    ["Vásárlási érték", formatMoney(batch.totalPriceAtPurchase, settings.currency)],
+    ["Vásárlási érték", formatMoney(batch.totalPriceAtPurchase, batch.currency || template.lastPriceCurrency || "HUF")],
     ["Lejárat", formatDate(batch.expiryDate)],
     ["Felvitel dátuma", formatDate(batch.createdAt?.slice(0, 10))],
     ["Hely", batch.location],
@@ -278,6 +278,8 @@ export function renderShopping(shopping, sort = "category") {
 }
 
 export function renderStatistics(stats, settings) {
+  const currencyNames = { HUF: "forint", EUR: "euró", GBP: "angol font", USD: "amerikai dollár", SEK: "svéd korona" };
+  document.querySelector("#statsCurrencyNote").textContent = `Pénzügyi összesítés: ${currencyNames[settings.currency] || settings.currency}`;
   document.querySelector("#weeklyWasteValue").textContent = formatMoney(stats.weeklyDiscardedValue, settings.currency);
   document.querySelector("#weeklyChartSummary").textContent = formatMoney(stats.weeklyDiscardedValue, settings.currency);
   const chartValues = stats.weeklyDiscardedByDay || [];

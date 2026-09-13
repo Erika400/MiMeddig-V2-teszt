@@ -28,20 +28,16 @@ function inferCategory(product) {
 
 export function parsePackage(product = {}) {
   const numeric = Number(String(product.product_quantity ?? "").replace(",", "."));
-  const normalizedUnit = String(product.product_quantity_unit || "").trim().toLowerCase();
-  const supportedUnit = ["g", "kg", "ml", "l", "db"].includes(normalizedUnit) ? normalizedUnit : "";
+  const normalizedUnit = String(product.product_quantity_unit || "").trim().toLowerCase().replace(/^floz$/, "fl oz");
+  const supportedUnit = ["g", "kg", "oz", "lb", "ml", "cl", "l", "fl oz", "db"].includes(normalizedUnit) ? normalizedUnit : "";
   if (Number.isFinite(numeric) && numeric > 0 && supportedUnit) {
     return { packageQuantity: numeric, packageUnit: supportedUnit, packageText: firstText(product.quantity, `${numeric} ${supportedUnit}`) };
   }
   const quantityText = firstText(product.quantity);
-  const match = quantityText.match(/([\d.,]+)\s*(kg|g|ml|cl|l|db)\b/i);
+  const match = quantityText.match(/([\d.,]+)\s*(fl\s*oz|kg|lb|oz|g|ml|cl|l|db)\b/i);
   if (!match) return { packageQuantity: null, packageUnit: "g", packageText: quantityText };
   let quantity = Number(match[1].replace(",", "."));
-  let unit = match[2].toLowerCase();
-  if (unit === "cl") {
-    quantity *= 10;
-    unit = "ml";
-  }
+  let unit = match[2].toLowerCase().replace(/\s+/g, " ");
   return { packageQuantity: quantity, packageUnit: unit, packageText: quantityText };
 }
 

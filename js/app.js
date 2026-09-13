@@ -11,7 +11,7 @@ import {
   unitDefinition,
   validateAllocation,
   valueForQuantity
-} from "./domain.js?v=23";
+} from "./domain.js?v=25";
 import {
   addBatchToShopping,
   applyQuantityAllocation,
@@ -26,10 +26,11 @@ import {
   listShoppingItems,
   listTemplates,
   saveProduct,
+  saveSettings,
   saveShoppingItem,
   setShoppingPurchased,
   undoQuantityAllocation
-} from "./repository.js?v=25";
+} from "./repository.js?v=27";
 import {
   escapeHtml,
   fullProductName,
@@ -38,8 +39,8 @@ import {
   renderProductDetail,
   renderShopping,
   renderStatistics
-} from "./render.js?v=33";
-import { confirmProduct, inventoryDefaultsFromCatalog, lookupProductByBarcode, normalizeBarcode, rememberManualProduct } from "./product-catalog.js?v=2";
+} from "./render.js?v=35";
+import { confirmProduct, inventoryDefaultsFromCatalog, lookupProductByBarcode, normalizeBarcode, rememberManualProduct } from "./product-catalog.js?v=3";
 import { cameraScannerSupported, startCameraScanner, stopCameraScanner } from "./scanner.js?v=1";
 
 const state = {
@@ -68,6 +69,14 @@ const state = {
 
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
+const CURRENCY_SYMBOLS = Object.freeze({ HUF: "Ft", EUR: "€", GBP: "£", USD: "$", SEK: "kr" });
+
+function applyPriceCurrency(currency) {
+  const selected = CURRENCY_SYMBOLS[currency] ? currency : "HUF";
+  $("#productCurrency").value = selected;
+  $("#productPrice").step = selected === "HUF" ? "1" : "0.01";
+  $("#productPrice").placeholder = selected === "HUF" ? "Például 699" : "Például 3,49";
+}
 
 function setGreeting() {
   const hour = new Date().getHours();
@@ -86,7 +95,9 @@ async function refreshData() {
     getSettings()
   ]);
   setGreeting();
-  const stats = calculateStatistics(state.events);
+  const stats = calculateStatistics(state.events, new Date(), state.settings.currency);
+  $("#currencySetting").value = state.settings.currency;
+  $("#currencySettingIcon").textContent = CURRENCY_SYMBOLS[state.settings.currency] || "Ft";
   renderHome({ batches: state.batches, shopping: state.shopping, stats, settings: state.settings });
   renderInventory({
     batches: state.batches,
@@ -306,6 +317,7 @@ async function openProductForm({ batch = null, template = null, catalogProduct =
     ? batch.totalPriceAtPurchase
     : Number(source.lastPrice) > 0 ? source.lastPrice : "";
   setFormField("#productPrice", suggestedPrice);
+  applyPriceCurrency(batch?.currency || source.lastPriceCurrency || state.settings.currency || "HUF");
   setFormField("#productBarcode", source.barcode || "");
   setFormField("#productPackageQuantity", source.packageQuantity || "");
   setFormField("#productPackageUnit", source.packageUnit || "g");
@@ -370,6 +382,7 @@ async function submitProduct(event) {
       unit,
       baseUnit: unitDefinition(unit).baseUnit,
       totalPrice: $("#productPrice").value,
+      currency: $("#productCurrency").value,
       expiryDate: $("#productExpiry").value,
       barcode,
       packageQuantity,
@@ -452,7 +465,7 @@ function updateQuantityPreview() {
     $("#quantityError").hidden = true;
     const discarded = quantities.discarded;
     $("#liveWasteEstimate").hidden = discarded <= 0;
-    $("#liveWasteEstimate").textContent = `Becsült kidobási veszteség: ${formatMoney(valueForQuantity(batch, discarded), state.settings.currency)}`;
+    $("#liveWasteEstimate").textContent = `Becsült kidobási veszteség: ${formatMoney(valueForQuantity(batch, discarded), batch.currency || "HUF")}`;
     $("#saveQuantitySplit").disabled = allocation.allocated <= 0;
   } catch (error) {
     $("#quantityRemaining").textContent = "A megadott összegek meghaladják a teljes mennyiséget.";
@@ -719,6 +732,16 @@ async function handleClick(event) {
 }
 
 async function handleChange(event) {
+  if (event.target.id === "currencySetting") {
+    await saveSettings({ currency: event.target.value });
+    await refreshData();
+    showToast(`Az új termékek pénzneme: ${CURRENCY_SYMBOLS[event.target.value]}.`);
+    return;
+  }
+  if (event.target.id === "productCurrency") {
+    applyPriceCurrency(event.target.value);
+    return;
+  }
   if (event.target.id === "productLocation") {
     $("#customLocationField").hidden = event.target.value !== "__custom__";
     if (event.target.value === "__custom__") $("#customLocation").focus();
@@ -761,6 +784,10 @@ async function init() {
     $("#purchaseBackdrop").addEventListener("click", cancelPurchaseSheet);
     $("#productPackageQuantity").addEventListener("keydown", handleDecimalComma);
     $("#productPackageQuantity").addEventListener("paste", handleDecimalPaste);
+    $("#productQuantity").addEventListener("keydown", handleDecimalComma);
+    $("#productQuantity").addEventListener("paste", handleDecimalPaste);
+    $("#productPrice").addEventListener("keydown", handleDecimalComma);
+    $("#productPrice").addEventListener("paste", handleDecimalPaste);
     window.addEventListener("pagehide", () => stopCameraScanner($("#scannerVideo")));
     if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch((error) => console.warn("A service worker nem indult el:", error));
   } catch (error) {

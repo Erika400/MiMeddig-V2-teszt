@@ -2,8 +2,12 @@ export const UNIT_DEFINITIONS = Object.freeze({
   g: { baseUnit: "g", factor: 1, decimals: 0 },
   dkg: { baseUnit: "g", factor: 10, decimals: 1 },
   kg: { baseUnit: "g", factor: 1000, decimals: 3 },
+  oz: { baseUnit: "g", factor: 28.349523125, decimals: 2 },
+  lb: { baseUnit: "g", factor: 453.59237, decimals: 2 },
   ml: { baseUnit: "ml", factor: 1, decimals: 0 },
+  cl: { baseUnit: "ml", factor: 10, decimals: 1 },
   l: { baseUnit: "ml", factor: 1000, decimals: 3 },
+  "fl oz": { baseUnit: "ml", factor: 29.5735295625, decimals: 2 },
   db: { baseUnit: "db", factor: 1, decimals: 2 },
   csomag: { baseUnit: "csomag", factor: 1, decimals: 2 },
   doboz: { baseUnit: "doboz", factor: 1, decimals: 2 },
@@ -80,6 +84,7 @@ export function formatQuantity(baseValue, displayUnit) {
 
 export function formatMoney(value, currency = "HUF") {
   if (currency === "HUF") return `${new Intl.NumberFormat("hu-HU", { maximumFractionDigits: 0 }).format(Math.round(Number(value) || 0))} Ft`;
+  if (currency === "SEK") return `${new Intl.NumberFormat("hu-HU", { minimumFractionDigits: 0, maximumFractionDigits: 2 }).format(Number(value) || 0)} kr`;
   return new Intl.NumberFormat("hu-HU", { style: "currency", currency }).format(Number(value) || 0);
 }
 
@@ -117,7 +122,7 @@ export function valueForQuantity(batch, quantityBase) {
   const initialQuantity = Number(batch.initialQuantityBase) || Number(batch.quantityBase) || 0;
   const totalPrice = Number(batch.totalPriceAtPurchase) || 0;
   if (initialQuantity <= 0) return 0;
-  return Math.round((totalPrice / initialQuantity) * Number(quantityBase || 0));
+  return Math.round((totalPrice / initialQuantity) * Number(quantityBase || 0) * 100) / 100;
 }
 
 export function validateAllocation(totalBase, allocation) {
@@ -139,7 +144,7 @@ function isSameMonth(date, reference) {
   return date.getFullYear() === reference.getFullYear() && date.getMonth() === reference.getMonth();
 }
 
-export function calculateStatistics(events, reference = new Date()) {
+export function calculateStatistics(events, reference = new Date(), currency = "HUF") {
   const weekStart = startOfWeek(reference);
   const elapsedWeekDays = (reference.getDay() + 6) % 7;
   const previousWeekStart = new Date(weekStart);
@@ -150,7 +155,7 @@ export function calculateStatistics(events, reference = new Date()) {
   const previousMonthDays = new Date(reference.getFullYear(), reference.getMonth(), 0).getDate();
   const previousMonthEnd = new Date(previousMonthStart.getFullYear(), previousMonthStart.getMonth(), Math.min(reference.getDate(), previousMonthDays) + 1);
   const usableEvents = events.filter((event) => !event.deletedAt && event.occurredAt);
-  const discarded = usableEvents.filter((event) => event.type === "discarded");
+  const discarded = usableEvents.filter((event) => event.type === "discarded" && (event.financialCurrency || "HUF") === currency);
   const consumed = usableEvents.filter((event) => event.type === "consumed");
   const thisWeek = discarded.filter((event) => new Date(event.occurredAt) >= weekStart);
   const thisMonth = discarded.filter((event) => isSameMonth(new Date(event.occurredAt), reference));
