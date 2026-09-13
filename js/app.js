@@ -302,7 +302,7 @@ async function openProductForm({ batch = null, template = null, catalogProduct =
   setFormField("#productLocation", customLocation ? "__custom__" : chosenLocation);
   setFormField("#customLocation", "");
   $("#customLocationField").hidden = !customLocation;
-  setFormField("#productExpiry", batch?.expiryDate || addDaysIso(7));
+  setFormField("#productExpiry", batch?.expiryDate || todayIso());
   const catalogInventory = inventoryDefaultsFromCatalog(catalogProduct);
   const displayUnit = batch?.displayUnit || (catalogProduct ? catalogInventory.unit : source.displayUnit) || "db";
   setFormField("#productUnit", displayUnit);
