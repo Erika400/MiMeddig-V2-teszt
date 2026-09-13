@@ -215,13 +215,13 @@ export function renderProductDetail(batch, settings) {
   expiryElement.className = `detail-expiry status-${expiry.status}`;
   expiryElement.textContent = expiry.label;
   document.querySelector("#detailTimeline").innerHTML = timelineMarkup(batch, "detail-hero-timeline");
+  const packageText = template.packageText || (template.packageQuantity ? `${template.packageQuantity} ${template.packageUnit || ""}`.trim() : "Nincs megadva");
   const values = [
     ["Mennyiség", formatQuantity(batch.quantityBase, batch.displayUnit)],
-    ["Kiszerelés / egység", batch.displayUnit],
+    ["Kiszerelés", packageText],
     ["Vásárlási érték", formatMoney(batch.totalPriceAtPurchase, settings.currency)],
     ["Lejárat", formatDate(batch.expiryDate)],
-    ["Felvitel ideje", formatDate(batch.createdAt?.slice(0, 10))],
-    ["Vásárlás ideje", formatDate(batch.purchaseDate)],
+    ["Felvitel dátuma", formatDate(batch.createdAt?.slice(0, 10))],
     ["Hely", batch.location],
     ["Vonalkód", template.barcode || "Nincs megadva"],
     ["Megjegyzés", batch.note || "Nincs megjegyzés"]

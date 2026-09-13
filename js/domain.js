@@ -1,5 +1,6 @@
 export const UNIT_DEFINITIONS = Object.freeze({
   g: { baseUnit: "g", factor: 1, decimals: 0 },
+  dkg: { baseUnit: "g", factor: 10, decimals: 1 },
   kg: { baseUnit: "g", factor: 1000, decimals: 3 },
   ml: { baseUnit: "ml", factor: 1, decimals: 0 },
   l: { baseUnit: "ml", factor: 1000, decimals: 3 },
@@ -49,7 +50,7 @@ export function compatibleUnits(unitOrBase) {
 }
 
 export function quantityStep(unit) {
-  return ["g", "ml"].includes(unit) ? 1 : 0.1;
+  return ["g", "dkg", "ml"].includes(unit) ? 1 : 0.1;
 }
 
 export function parseDecimal(value) {

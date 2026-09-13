@@ -1,12 +1,14 @@
 const DATABASE_NAME = "mimeddig-v2";
-const DATABASE_VERSION = 2;
+const DATABASE_VERSION = 3;
 
 const STORES = Object.freeze({
   templates: "templates",
   batches: "batches",
   events: "events",
   shopping: "shopping",
-  settings: "settings"
+  settings: "settings",
+  productCache: "productCache",
+  catalogDrafts: "catalogDrafts"
 });
 
 let databasePromise;
@@ -21,11 +23,13 @@ function ensureStore(database, transaction, name, keyPath, indexes = []) {
 }
 
 function createSchema(database, transaction) {
-  ensureStore(database, transaction, STORES.templates, "id", [["nameKey", "nameKey"], ["barcode", "barcode"], ["updatedAt", "updatedAt"]]);
+  ensureStore(database, transaction, STORES.templates, "id", [["nameKey", "nameKey"], ["identityKey", "identityKey"], ["barcode", "barcode"], ["updatedAt", "updatedAt"]]);
   ensureStore(database, transaction, STORES.batches, "id", [["templateId", "templateId"], ["location", "location"], ["expiryDate", "expiryDate"], ["status", "status"], ["updatedAt", "updatedAt"]]);
   ensureStore(database, transaction, STORES.events, "id", [["batchId", "batchId"], ["type", "type"], ["occurredAt", "occurredAt"]]);
   ensureStore(database, transaction, STORES.shopping, "id", [["status", "status"], ["createdAt", "createdAt"]]);
   ensureStore(database, transaction, STORES.settings, "key");
+  ensureStore(database, transaction, STORES.productCache, "barcode", [["source", "source"], ["cachedAt", "cachedAt"]]);
+  ensureStore(database, transaction, STORES.catalogDrafts, "barcode", [["updatedAt", "updatedAt"], ["syncStatus", "syncStatus"]]);
 }
 
 export function openDatabase() {

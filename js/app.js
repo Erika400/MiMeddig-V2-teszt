@@ -11,7 +11,7 @@ import {
   unitDefinition,
   validateAllocation,
   valueForQuantity
-} from "./domain.js?v=22";
+} from "./domain.js?v=23";
 import {
   addBatchToShopping,
   applyQuantityAllocation,
@@ -29,7 +29,7 @@ import {
   saveShoppingItem,
   setShoppingPurchased,
   undoQuantityAllocation
-} from "./repository.js?v=24";
+} from "./repository.js?v=25";
 import {
   escapeHtml,
   fullProductName,
@@ -38,7 +38,9 @@ import {
   renderProductDetail,
   renderShopping,
   renderStatistics
-} from "./render.js?v=29";
+} from "./render.js?v=33";
+import { confirmProduct, inventoryDefaultsFromCatalog, lookupProductByBarcode, normalizeBarcode, rememberManualProduct } from "./product-catalog.js?v=2";
+import { cameraScannerSupported, startCameraScanner, stopCameraScanner } from "./scanner.js?v=1";
 
 const state = {
   batches: [],
@@ -56,7 +58,12 @@ const state = {
   shoppingSort: "category",
   returnScreen: "home",
   undoAction: null,
-  toastTimer: null
+  toastTimer: null,
+  scannerProduct: null,
+  scannerBarcode: "",
+  pendingCatalogProduct: null,
+  pendingCatalogManual: false,
+  scannerReturnScreen: "home"
 };
 
 const $ = (selector) => document.querySelector(selector);
@@ -106,6 +113,7 @@ async function refreshData() {
 
 function showScreen(screen) {
   if (state.screen === "add" && screen !== "add") state.pendingShoppingItemId = null;
+  if (state.screen === "scanner" && screen !== "scanner") stopCameraScanner($("#scannerVideo"));
   state.screen = screen;
   $$("[data-screen]").forEach((element) => {
     const active = element.dataset.screen === screen;
@@ -155,16 +163,125 @@ function setFormField(selector, value = "") {
   $(selector).value = value ?? "";
 }
 
-async function openProductForm({ batch = null, template = null, customLocation = false, shoppingItemId = null } = {}) {
+function resetScannerResult() {
+  state.scannerProduct = null;
+  state.scannerBarcode = "";
+  $("#scannerStatus").textContent = "";
+  $("#barcodeResult").hidden = true;
+  $("#barcodeResultImage").hidden = true;
+  $("#barcodeResultActions").hidden = false;
+  $("#addUnknownBarcode").hidden = true;
+}
+
+function openScanner() {
+  state.scannerReturnScreen = state.screen === "scanner" ? "home" : state.screen;
+  stopCameraScanner($("#scannerVideo"));
+  $("#barcodeLookupForm").reset();
+  resetScannerResult();
+  const supported = cameraScannerSupported();
+  $("#startScannerCamera").textContent = "Kamera bekapcsolása";
+  $("#startScannerCamera").disabled = !supported;
+  $("#scannerSupport").textContent = supported
+    ? "A kamera engedélyét csak a leolvasáshoz kérjük."
+    : "Ezen az eszközön a kamerás felismerés nem érhető el, de a kódot beírhatod kézzel.";
+  $("#scannerPlaceholder").hidden = false;
+  showScreen("scanner");
+  setTimeout(() => supported ? $("#startScannerCamera").focus() : $("#barcodeLookupInput").focus(), 0);
+}
+
+function showScannerProduct(product, stage = "external") {
+  state.scannerProduct = product;
+  state.scannerBarcode = product.barcode;
+  $("#barcodeResult").hidden = false;
+  $("#barcodeResultActions").hidden = false;
+  $("#addUnknownBarcode").hidden = true;
+  $("#barcodeResultKicker").textContent = stage === "cache" ? "Korábbról már ismerem" : "Ezt találtam";
+  $("#barcodeResultName").textContent = `${product.brand ? `${product.brand} ` : ""}${product.name}`;
+  $("#barcodeResultPackage").textContent = product.packageText || (product.packageQuantity ? `${product.packageQuantity} ${product.packageUnit}` : "A kiszerelés nincs megadva");
+  $("#barcodeResultNote").textContent = "A találatot mentés előtt ellenőrizd.";
+  const image = $("#barcodeResultImage");
+  image.hidden = !product.imageUrl;
+  image.src = product.imageUrl || "";
+  image.alt = product.imageUrl ? `${product.name} termékképe` : "";
+  image.onerror = () => { image.hidden = true; };
+  $("#scannerStatus").textContent = "Ellenőrizd, hogy valóban ezt a terméket tartod a kezedben.";
+}
+
+function showUnknownBarcode(barcode, unavailable = false) {
+  state.scannerProduct = null;
+  state.scannerBarcode = barcode;
+  $("#barcodeResult").hidden = false;
+  $("#barcodeResultImage").hidden = true;
+  $("#barcodeResultActions").hidden = true;
+  $("#addUnknownBarcode").hidden = false;
+  $("#barcodeResultKicker").textContent = unavailable ? "Most nincs hálózati találat" : "Ezt még nem ismerem";
+  $("#barcodeResultName").textContent = barcode;
+  $("#barcodeResultPackage").textContent = "Add meg röviden a termék nevét, márkáját és kiszerelését.";
+  $("#barcodeResultNote").textContent = unavailable ? "A helyi termékek továbbra is használhatók." : "A megadott adat először csak ezen az eszközön marad.";
+  $("#scannerStatus").textContent = unavailable ? "Az online keresés nem sikerült, de kézzel folytathatod." : "Nem találtam egyezést a helyi vagy külső katalógusban.";
+}
+
+async function findBarcode(value) {
+  const button = $("#lookupBarcodeButton");
+  button.disabled = true;
+  $("#scannerStatus").textContent = "Keresem a terméket…";
+  $("#barcodeResult").hidden = true;
+  stopCameraScanner($("#scannerVideo"));
+  $("#scannerPlaceholder").hidden = false;
+  try {
+    const barcode = normalizeBarcode(value);
+    $("#barcodeLookupInput").value = barcode;
+    const result = await lookupProductByBarcode(barcode);
+    if (result.status === "found") showScannerProduct(result.product, result.stage);
+    else showUnknownBarcode(barcode, result.status === "unavailable");
+  } catch (error) {
+    $("#scannerStatus").textContent = error.message;
+  } finally {
+    button.disabled = false;
+  }
+}
+
+async function submitBarcodeLookup(event) {
+  event.preventDefault();
+  return findBarcode($("#barcodeLookupInput").value);
+}
+
+async function startScannerCameraFlow() {
+  const button = $("#startScannerCamera");
+  button.disabled = true;
+  $("#scannerStatus").textContent = "Kamera indítása…";
+  try {
+    await startCameraScanner($("#scannerVideo"), (barcode) => findBarcode(barcode));
+    $("#scannerPlaceholder").hidden = true;
+    $("#scannerStatus").textContent = "Tartsd mozdulatlanul a vonalkódot a keretben.";
+    button.textContent = "Kamera aktív";
+  } catch (error) {
+    $("#scannerPlaceholder").hidden = false;
+    $("#scannerStatus").textContent = error.name === "NotAllowedError"
+      ? "Nem kaptunk kameraengedélyt. A kódot alább kézzel is beírhatod."
+      : error.message || "A kamera nem indítható el.";
+    button.disabled = false;
+  }
+}
+
+async function useScannerProduct(correct = false) {
+  if (!state.scannerProduct) return;
+  const product = correct ? state.scannerProduct : await confirmProduct(state.scannerProduct);
+  return openProductForm({ catalogProduct: product, catalogManual: correct });
+}
+
+async function openProductForm({ batch = null, template = null, catalogProduct = null, catalogManual = false, customLocation = false, shoppingItemId = null } = {}) {
   state.pendingShoppingItemId = shoppingItemId;
+  state.pendingCatalogProduct = catalogProduct;
+  state.pendingCatalogManual = catalogManual;
   state.returnScreen = state.screen === "add" ? "home" : state.screen;
   $("#productForm").reset();
   $("#editingBatchId").value = batch?.id || "";
   $("#productTemplateId").value = template?.id || batch?.templateId || "";
-  $("#formEyebrow").textContent = batch ? "Készlettétel szerkesztése" : template ? "Gyors újrafelvitel" : "Gyors felvitel";
-  $("#formTitle").textContent = batch ? "Termék szerkesztése" : template ? "Újra megvettem" : "Új termék";
-  $("#formSubtitle").textContent = batch ? "A módosítás csak ezt a külön készlettételt érinti." : "A név, a hely és a dátum elég.";
-  const source = batch?.template || template || {};
+  $("#formEyebrow").textContent = batch ? "Készlettétel szerkesztése" : catalogManual ? "Vonalkód kézi azonosítása" : catalogProduct ? "Vonalkód alapján" : template ? "Gyors újrafelvitel" : "Gyors felvitel";
+  $("#formTitle").textContent = batch ? "Termék szerkesztése" : catalogManual ? "Termék adatainak megadása" : catalogProduct ? "Felismert termék" : template ? "Újra megvettem" : "Új termék";
+  $("#formSubtitle").textContent = batch ? "A módosítás csak ezt a külön készlettételt érinti." : catalogProduct ? "Ellenőrizd az adatokat, majd add meg a lejáratot." : "A név, a hely és a dátum elég.";
+  const source = batch?.template || template || catalogProduct || {};
   const chosenLocation = batch?.location || source.defaultLocation || state.settings.defaultLocations[0];
   locationOptions(chosenLocation);
   setFormField("#productName", source.name || "");
@@ -175,18 +292,36 @@ async function openProductForm({ batch = null, template = null, customLocation =
   setFormField("#customLocation", "");
   $("#customLocationField").hidden = !customLocation;
   setFormField("#productExpiry", batch?.expiryDate || addDaysIso(7));
-  const displayUnit = batch?.displayUnit || source.displayUnit || "db";
+  const catalogInventory = inventoryDefaultsFromCatalog(catalogProduct);
+  const displayUnit = batch?.displayUnit || (catalogProduct ? catalogInventory.unit : source.displayUnit) || "db";
   setFormField("#productUnit", displayUnit);
-  setFormField("#productQuantity", batch ? fromBaseQuantity(batch.quantityBase, displayUnit) : source.defaultQuantityBase ? fromBaseQuantity(source.defaultQuantityBase, displayUnit) : 1);
+  setFormField("#productQuantity", batch
+    ? fromBaseQuantity(batch.quantityBase, displayUnit)
+    : catalogProduct
+      ? catalogInventory.quantity
+      : source.defaultQuantityBase
+        ? fromBaseQuantity(source.defaultQuantityBase, displayUnit)
+        : 1);
   const suggestedPrice = batch
     ? batch.totalPriceAtPurchase
     : Number(source.lastPrice) > 0 ? source.lastPrice : "";
   setFormField("#productPrice", suggestedPrice);
-  setFormField("#purchaseDate", batch?.purchaseDate || todayIso());
   setFormField("#productBarcode", source.barcode || "");
+  setFormField("#productPackageQuantity", source.packageQuantity || "");
+  setFormField("#productPackageUnit", source.packageUnit || "g");
+  setFormField("#productCatalogSource", source.catalogSource || source.source || "");
+  setFormField("#productCatalogSourceLabel", source.catalogSourceLabel || source.sourceLabel || "");
+  setFormField("#productCatalogProductId", source.catalogProductId || source.barcode || "");
+  setFormField("#productImageUrl", source.imageUrl || "");
   setFormField("#productNote", batch?.note || "");
+  const recognized = Boolean(source.barcode);
+  $("#recognizedProductNote").hidden = !recognized;
+  $("#recognizedProductTitle").textContent = catalogManual ? "Ezt a vonalkódot most tanítod meg" : `${source.brand ? `${source.brand} ` : ""}${source.name || source.barcode}`;
+  $("#recognizedProductSource").textContent = catalogManual
+    ? "Mentés után ezen az eszközön már automatikusan felismerjük."
+    : source.packageText || (source.packageQuantity ? `${source.packageQuantity} ${source.packageUnit}` : "Az adatok automatikusan kitöltve");
   showScreen("add");
-  setTimeout(() => $("#productName").focus(), 0);
+  setTimeout(() => catalogProduct && !catalogManual ? $("#productExpiry").focus() : $("#productName").focus(), 0);
 }
 
 async function submitProduct(event) {
@@ -200,6 +335,30 @@ async function submitProduct(event) {
   }
   const unit = $("#productUnit").value;
   try {
+    const barcode = $("#productBarcode").value.trim() ? normalizeBarcode($("#productBarcode").value) : "";
+    let catalogSource = $("#productCatalogSource").value;
+    let catalogSourceLabel = $("#productCatalogSourceLabel").value;
+    let catalogProductId = $("#productCatalogProductId").value;
+    let imageUrl = $("#productImageUrl").value;
+    const packageQuantity = $("#productPackageQuantity").value;
+    const packageUnit = $("#productPackageUnit").value;
+    if (barcode && (state.pendingCatalogManual || !catalogSource)) {
+      const remembered = await rememberManualProduct({
+        barcode,
+        brand: $("#productBrand").value.trim(),
+        name: $("#productName").value.trim(),
+        category: $("#productCategory").value,
+        subcategory: $("#productSubcategory").value.trim() || "Egyéb",
+        packageQuantity: Math.max(0, Number(packageQuantity) || 0) || null,
+        packageUnit,
+        packageText: packageQuantity ? `${packageQuantity} ${packageUnit}` : "",
+        imageUrl
+      });
+      catalogSource = remembered.source;
+      catalogSourceLabel = remembered.sourceLabel;
+      catalogProductId = remembered.barcode;
+      imageUrl = remembered.imageUrl || "";
+    }
     const result = await saveProduct({
       templateId: $("#productTemplateId").value || null,
       name: $("#productName").value,
@@ -212,8 +371,14 @@ async function submitProduct(event) {
       baseUnit: unitDefinition(unit).baseUnit,
       totalPrice: $("#productPrice").value,
       expiryDate: $("#productExpiry").value,
-      purchaseDate: $("#purchaseDate").value,
-      barcode: $("#productBarcode").value,
+      barcode,
+      packageQuantity,
+      packageUnit,
+      packageText: state.pendingCatalogProduct?.packageText || (packageQuantity ? `${packageQuantity} ${packageUnit}` : ""),
+      catalogSource,
+      catalogSourceLabel,
+      catalogProductId,
+      imageUrl,
       note: $("#productNote").value
     }, $("#editingBatchId").value || null);
     state.selectedBatchId = result.batch.id;
@@ -222,6 +387,8 @@ async function submitProduct(event) {
       await setShoppingPurchased(purchasedFromShopping, true);
       state.pendingShoppingItemId = null;
     }
+    state.pendingCatalogProduct = null;
+    state.pendingCatalogManual = false;
     await refreshData();
     renderProductDetail(await getBatch(result.batch.id), state.settings);
     showScreen("product-detail");
@@ -254,6 +421,15 @@ function setQuantityUnitOptions(batch) {
     input.value = 0;
     input.step = quantityStep(select.value);
   });
+}
+
+function orderQuantityRows(primaryAction = null) {
+  const actions = ["consumed", "frozen", "discarded"];
+  const orderedActions = actions.includes(primaryAction)
+    ? [primaryAction, ...actions.filter((action) => action !== primaryAction)]
+    : actions;
+  const grid = $(".quantity-split-grid");
+  orderedActions.forEach((action) => grid.append($(`.quantity-${action}`)));
 }
 
 function quantityValues() {
@@ -327,6 +503,7 @@ function openQuantitySheet(batchId, action = null) {
   const batch = state.batches.find((item) => item.id === batchId);
   if (!batch) return showToast("Ez a termék már nincs készleten.");
   state.quantityBatchId = batchId;
+  orderQuantityRows(action);
   setQuantityUnitOptions(batch);
   if (action) $(`#${action}Amount`).value = fromBaseQuantity(batch.quantityBase, $(`#${action}Unit`).value);
   $("#quantityTitle").textContent = fullProductName(batch);
@@ -451,6 +628,12 @@ async function submitShoppingEdit(event) {
 async function handleClick(event) {
   const button = event.target.closest("button");
   if (!button) return;
+  if (button.hasAttribute("data-open-scanner")) return openScanner();
+  if (button.id === "startScannerCamera") return startScannerCameraFlow();
+  if (button.id === "closeScanner") return showScreen(state.scannerReturnScreen || "home");
+  if (button.id === "confirmBarcodeResult") return useScannerProduct(false);
+  if (button.id === "correctBarcodeResult") return useScannerProduct(true);
+  if (button.id === "addUnknownBarcode") return openProductForm({ catalogProduct: { barcode: state.scannerBarcode, name: "", brand: "", category: "Egyéb", packageUnit: "g", source: "mimeddig-local", sourceLabel: "Saját, helyi termékadat" }, catalogManual: true });
   if (button.dataset.navScreen === "add" || button.hasAttribute("data-open-add")) return openProductForm();
   if (button.dataset.navScreen) return showScreen(button.dataset.navScreen);
   if (button.dataset.goScreen) {
@@ -571,10 +754,14 @@ async function init() {
       $(`#${kind}Unit`).addEventListener("change", () => convertQuantityUnit(kind));
     });
     $("#productForm").addEventListener("submit", submitProduct);
+    $("#barcodeLookupForm").addEventListener("submit", submitBarcodeLookup);
     $("#shoppingForm").addEventListener("submit", addShopping);
     $("#shoppingEditForm").addEventListener("submit", submitShoppingEdit);
     $("#quantityBackdrop").addEventListener("click", closeQuantitySheet);
     $("#purchaseBackdrop").addEventListener("click", cancelPurchaseSheet);
+    $("#productPackageQuantity").addEventListener("keydown", handleDecimalComma);
+    $("#productPackageQuantity").addEventListener("paste", handleDecimalPaste);
+    window.addEventListener("pagehide", () => stopCameraScanner($("#scannerVideo")));
     if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch((error) => console.warn("A service worker nem indult el:", error));
   } catch (error) {
     console.error(error);

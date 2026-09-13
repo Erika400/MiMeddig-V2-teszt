@@ -1,4 +1,4 @@
-import { STORES, getAll, getOne, putOne, runTransaction } from "./db.js?v=10";
+import { STORES, getAll, getOne, putOne, runTransaction } from "./db.js?v=11";
 import { createId, normalizeText, nowIso, todayIso, toBaseQuantity, validateAllocation, valueForQuantity } from "./domain.js?v=22";
 
 const ACTIVE_STATUS = "active";
@@ -79,9 +79,16 @@ export async function getBatch(id) {
 export async function saveProduct(formData, existingBatchId = null) {
   const templates = await listTemplates();
   const existingBatch = existingBatchId ? await getOne(STORES.batches, existingBatchId) : null;
+  const barcode = formData.barcode?.trim() || null;
+  const packageQuantity = Math.max(0, Number(formData.packageQuantity) || 0) || null;
+  const packageUnit = formData.packageUnit || null;
+  const nameKey = `${normalizeText(formData.name)}|${normalizeText(formData.brand)}`;
+  const identityKey = `${nameKey}|${packageQuantity || ""}|${packageUnit || ""}`;
   const existingTemplate = formData.templateId
     ? templates.find((item) => item.id === formData.templateId)
-    : templates.find((item) => item.nameKey === `${normalizeText(formData.name)}|${normalizeText(formData.brand)}`);
+    : barcode
+      ? templates.find((item) => item.barcode === barcode)
+      : templates.find((item) => item.identityKey === identityKey || (!packageQuantity && item.nameKey === nameKey));
   const quantityBase = toBaseQuantity(formData.quantity, formData.unit);
   if (quantityBase <= 0) throw new Error("A mennyiség legyen nagyobb nullánál.");
   const timestamp = nowIso();
@@ -91,7 +98,8 @@ export async function saveProduct(formData, existingBatchId = null) {
     id: existingTemplate?.id || createId("template"),
     name: formData.name.trim(),
     brand: formData.brand.trim(),
-    nameKey: `${normalizeText(formData.name)}|${normalizeText(formData.brand)}`,
+    nameKey,
+    identityKey,
     category: formData.category || "Egyéb",
     subcategory: formData.subcategory?.trim() || "Egyéb",
     defaultLocation: formData.location,
@@ -99,7 +107,14 @@ export async function saveProduct(formData, existingBatchId = null) {
     baseUnit: formData.baseUnit,
     displayUnit: formData.unit,
     lastPrice: Math.max(0, Number(formData.totalPrice) || 0),
-    barcode: formData.barcode?.trim() || null,
+    barcode,
+    packageQuantity,
+    packageUnit,
+    packageText: formData.packageText?.trim() || null,
+    catalogProductId: formData.catalogProductId || null,
+    catalogSource: formData.catalogSource || null,
+    catalogSourceLabel: formData.catalogSourceLabel || null,
+    imageUrl: formData.imageUrl || null,
     ...withSyncFields(existingTemplate)
   };
 
@@ -116,7 +131,7 @@ export async function saveProduct(formData, existingBatchId = null) {
     displayUnit: formData.unit,
     totalPriceAtPurchase: Math.max(0, Number(formData.totalPrice) || 0),
     expiryDate: formData.expiryDate,
-    purchaseDate: formData.purchaseDate || todayIso(),
+    purchaseDate: existingBatch?.purchaseDate || existingBatch?.createdAt?.slice(0, 10) || todayIso(),
     frozenAt: existingBatch?.frozenAt || null,
     status: ACTIVE_STATUS,
     note: formData.note?.trim() || "",
